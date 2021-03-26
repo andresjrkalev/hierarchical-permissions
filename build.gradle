@@ -1,0 +1,49 @@
+plugins {
+    id 'org.springframework.boot' version '2.4.4'
+    id 'java'
+    id 'com.github.node-gradle.node' version '3.0.1'
+}
+
+apply plugin: 'io.spring.dependency-management'
+
+group = 'com.permissions.hierarchical'
+version = '1.0.0'
+sourceCompatibility = '1.8'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.projectlombok:lombok'
+    runtimeOnly 'com.h2database:h2'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'junit:junit'
+    testImplementation 'org.junit.platform:junit-platform-runner'
+    testImplementation 'org.assertj:assertj-core'
+}
+
+node {
+    version = '14.16.0'
+}
+
+task buildReactApp(type: NodeTask, dependsOn: 'npmInstall') {
+    script = project.file('node_modules/webpack/bin/webpack.js')
+    args = [
+            '--mode', 'development',
+            '--entry', './src/main/webapp/javascript/main.jsx',
+            '-o', './src/main/resources/static/dist'
+    ]
+}
+
+processResources.dependsOn 'buildReactApp'
+clean.delete << file('node_modules')
+clean.delete << file('src/main/resources/static/dist')
+
+test {
+    useJUnit()
+}
